@@ -3,7 +3,7 @@ CXXFLAGS := -Wall `root-config --glibs --cflags` -fPIC -O3
 LD := g++
 LDFLAGS := -g
 
-OBJ_DIR := build
+OBJ_DIR := bin
 SRC_DIR := src
 EXE_DIR := bin
 SOURCES := $(wildcard $(SRC_DIR)/*.cpp)
