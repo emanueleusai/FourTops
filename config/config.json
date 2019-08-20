@@ -1,0 +1,35 @@
+{
+
+	"modules": [
+		{
+			"name": "plot",
+			"property1": 5
+		}
+	],
+
+	"outfile": "pdf/outfile",
+
+	"sys": ["lumi"],
+
+	"lumi": 1.0,
+
+	"vars": {
+		"AK4HT":{
+			"nbin":100,
+			"xmin":0.0,
+			"xmax":2000.0
+		}
+	},
+
+	"folder": "/mnt/hadoop/store/group/bruxljm/FWLJMET102X_1lep2017_4t_081019_step1/",
+
+	"samples": {
+		"tttt":{ 
+  			"files": "nominal/TTTT_TuneCP5_13TeV-amcatnlo-pythia8/TTTT_TuneCP5_13TeV-amcatnlo-pythia8_*.root",
+  			"nevts":1,
+  			"xsec":1.0,
+  			"sys":"nominal"
+  		}
+  	}
+	
+}

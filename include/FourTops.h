@@ -16,11 +16,10 @@
 #include <map>
 #include <string>
 #include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/xml_parser.hpp>
+#include <boost/property_tree/json_parser.hpp>
 #include <boost/foreach.hpp>
 #include <set>
 #include <exception>
-//namespace pt = boost::property_tree;
 
 using namespace std;
 using namespace ROOT;

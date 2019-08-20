@@ -1,66 +1,55 @@
 #include "include/FourTops.h"
 
 int main(int argc, char** argv) {
-  // //TCanvas c("a");
-  // TFile input_file("/mnt/hadoop/store/group/bruxljm/FWLJMET102X_1lep2017_4t_081019_step1/nominal/TTTT_TuneCP5_13TeV-amcatnlo-pythia8/TTTT_TuneCP5_13TeV-amcatnlo-pythia8_1.root","READ");
-  // // unique_ptr<TObject> input_file.Get("ljmet");
+  cout << "Hello." << endl;
 
-  // auto tree= unique_ptr<TTree>(static_cast<TTree*>(input_file.Get("ljmet")));
+  if(argc==1) {
+  	cout << "No config file" << endl;
+  	return 1;
+  } 
+  ptree config;
+  read_json(argv[1], config);
+  EnableImplicitMT();
+  auto folder=config.get<std::string>("folder");
 
-  // // auto tree = unique_ptr<TTree>(static_cast<TTree*>(move(input_file.Get("ljmet"))));
-  // TTreeReader reader("ljmet",&input_file);
-  // TTreeReaderValue<std::any> nTracksRV(reader, "AK4HT");
+  auto lumi=config.get<float>("lumi");
 
-  // auto leaves = tree->GetListOfLeaves();
-  // auto nleaves = leaves->GetEntriesFast();
-  // for (int l=0;l<nleaves;l++)
-  // {
-  // 	TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
-  // 	cout<<leaf->GetName()<<" "<<leaf->GetTypeName()<<endl;
-  // }
+  for (const auto & v: config.get_child("samples") ){
+  	cout<<"Processing "<<v.first<<endl;
+  	auto nevts=v.second.get<float>("nevts");
+  	auto xsec=v.second.get<float>("xsec");
 
-  // while(reader.Next())
-  // {
-  // 	cout<<*any_cast<float*>(nTracksRV)<<endl;
 
-  //     // if (*nTracksRV < 587) {
-  //     //    continue; // Check if we don't have too many tracks
-  //     // }
-  //     // auto event = eventRV.Get();      //Read complete accepted event
-  //     //                                  //in memory.
-  //     // hnseg->Fill(event->GetNseg());   //Fill histogram with number of
-  //     //                                  //segments.
-  // }
-
-  //  // TTreeReaderValue<Event> eventRV(theReader, "event");
-  //  // TTreeReaderValue<Int_t> nTracksRV(theReader, "fNtrack");
-
-  TFile outfile("outfile.root", "RECREATE");
-
-  EnableImplicitMT(); // Tell ROOT you want to go parallel
-  RDataFrame d("ljmet", "/mnt/hadoop/store/group/bruxljm/FWLJMET102X_1lep2017_4t_081019_step1/nominal/TTTT_TuneCP5_13TeV-amcatnlo-pythia8/TTTT_TuneCP5_13TeV-amcatnlo-pythia8_*.root"); // Interface to TTree and TChain
-
-  map<string,vector<float> > interesting_variables;
-
-   ptree tree;
-
-    // Parse the XML into the property tree.
-    read_xml(filename, tree);
-
-  auto d2 = d.Filter("\
+  	RDataFrame d("ljmet",folder+v.second.get<std::string>("files"));
+  	TFile outfile((config.get<std::string>("outfile")+"_"+v.first+".root").c_str(), "RECREATE");
+  	auto doWeight= [&](double x) { return x * lumi * xsec / nevts > 4.; };
+  	auto d2 = d
+  	.Filter("\
   	(corr_met_MultiLepCalc > 50.0) && \
   	( (isMuon && NJets_JetSubCalc >= 7) || (isElectron && NJets_JetSubCalc >= 8) ) && \
   	( NJetsCSV_JetSubCalc >=2 ) && \
   	( AK4HT > 500.0 ) \
-  	");
-  auto myHisto = d2.Histo1D("AK4HT");
-  // auto myHisto = d.Histo1D("Branch_A"); // This happens in parallel!
-  // myHisto->Draw();
+  	")
+  	.Define("base_evt_weight",doWeight,{"MCWeight_MultiLepCalc"});
+  	
+  	for (const auto & var: config.get_child("vars") ){
+  		auto histo = d2.Histo1D({var.first.c_str(),"",var.second.get<int>("nbin"),
+  								var.second.get<float>("xmin"),var.second.get<float>("xmax")},
+  								var.first.c_str(),"base_evt_weight");
+  		histo->Write();
 
-  myHisto->Write();
+  	}
 
-  outfile.Close();
-  cout << "greeting" << endl;
+  	outfile.Close();
+  }
+
+  
+
+  
+
+  
+  
+  cout << "Goodbye." << endl;
   return 0;
 }
 
